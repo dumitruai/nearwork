@@ -81,7 +81,7 @@
     if (messageNotice && !canShowMessageNotice(messageNotice.thread.id)) removeMessageNotice();
   });
   onMount(() => {
-    let alive = true, fetching = false, queued = false;
+    let alive = true, fetching = false, queued = false, connected = false;
     const seenMessages = new Set<string>();
     async function showMessageNotice(conversationId: string, body: string) {
       const version = ++noticeVersion;
@@ -121,7 +121,7 @@
     }
     const realtime = connectChat({
       ready: () => void refreshUnread(),
-      status: () => {},
+      status: value => { connected = value; },
       event: event => {
         if (event.type === 'message' && event.data?.id && !seenMessages.has(event.data.id)) {
           seenMessages.add(event.data.id);
@@ -138,7 +138,7 @@
     });
     // Persisted changes (including demo welcome messages) can have no live event.
     refreshCounters = () => void refreshUnread();
-    const fallback = setInterval(() => { if (document.visibilityState === 'visible') void refreshUnread(); }, 15000);
+    const fallback = setInterval(() => { if (!connected && document.visibilityState === 'visible') void refreshUnread(); }, 15000);
     void refreshUnread();
     return () => {
       alive = false; clearTimeout(timer); clearInterval(fallback); realtime.close();
