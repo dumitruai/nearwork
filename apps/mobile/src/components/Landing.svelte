@@ -1,7 +1,7 @@
 <script lang="ts">
   import { ArrowRight, DownloadSimple, MapPin, Briefcase, CalendarBlank, Heart, X } from 'phosphor-svelte';
   import type { Role } from '../lib/api';
-  let { onstart, onsignin }: { onstart: (role: Role) => void; onsignin: () => void } = $props();
+  let { onstart, onsignin }: { onstart: (role?: Role) => void; onsignin: () => void } = $props();
   let guideOpen = $state(false);
   function showGuide(node: HTMLDialogElement) { node.showModal(); }
   const steps = [
@@ -23,8 +23,7 @@
         <h1 id="landing-title">GOOD WORK.<br />GOOD PEOPLE.<br /><span>CLOSER.</span></h1>
         <p class="landing-intro">Find nearby jobs, show your interest,<br class="landing-desktop-break" /> and start a conversation when you match.</p>
         <div class="landing-actions">
-          <button class="landing-cta filled" onclick={() => onstart('employee')}>Find work<ArrowRight size={26} /></button>
-          <button class="landing-cta" onclick={() => onstart('employer')}>Start hiring<ArrowRight size={26} /></button>
+          <button class="landing-cta filled" onclick={() => onstart()}>Join Nearwork<ArrowRight size={26} /></button>
         </div>
         <div class="landing-download">
           <h2>Also on Android</h2>
@@ -62,7 +61,7 @@
   <dialog class="sheet landing-reviewer" use:showGuide onclose={() => guideOpen = false} aria-labelledby="reviewer-title">
     <button class="icon" aria-label="Close reviewer guide" onclick={() => guideOpen = false}><X size={24} /></button>
     <p class="landing-eyebrow">Nearwork · Prototype</p><h2 id="reviewer-title">Reviewer guide</h2>
-    <h3>Getting started</h3><p>Create your own account with Find work or Start hiring. Use separate accounts to review both roles. No shared demo credentials are published.</p>
+    <h3>Getting started</h3><p>Select Join Nearwork, choose Employee or Employer, and create your account. Use separate accounts to review both roles. No shared demo credentials are published.</p>
     <h3>Worker walkthrough</h3><p>Set up your profile, choose job categories and a location, then browse nearby jobs. Pass or show interest, revisit roles in Saved, and chat after a match.</p>
     <h3>Employer walkthrough</h3><p>Set up a company profile, post a job, review incoming interests, and accept an applicant to open a conversation. Manage listings in Jobs and conversations in Chats.</p>
     <h3>Android installation</h3><p>The APK download is not available yet. Once a build is provided, download it on Android and allow installation from your browser if prompted.</p>

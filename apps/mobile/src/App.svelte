@@ -51,9 +51,9 @@
     const stopNative = startNative(() => { void refreshLocation(); });
     return () => { locationGeneration++; removeBack(); stopNative(); };
   });
-  function start(roleChoice: Role | null) {
+  function start(roleChoice?: Role | null) {
     history.replaceState(null, '', '/');
-    role = roleChoice; error = ''; screen = roleChoice ? 'signup' : 'signin';
+    role = roleChoice ?? null; error = ''; screen = roleChoice === undefined ? 'role' : roleChoice ? 'signup' : 'signin';
   }
   async function refreshAccount() { account = await api<Account>('me'); }
   let confirmSignout = $state(false);
