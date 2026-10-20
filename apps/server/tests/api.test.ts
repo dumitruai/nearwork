@@ -176,6 +176,10 @@ test('concurrent interests are idempotent, private, and stay pending until accep
   assert.equal((await request(`jobs/${jobId}/decision`, 'POST', { decision: 'interested' }, employer)).status, 403);
   assert.equal((await request('me/interests', 'GET', undefined, otherEmployee)).json.data.length, 0);
   assert.equal((await request('employer/interests', 'GET', undefined, outsider)).json.data.length, 0);
+  assert.equal((await request('employer/interests/count')).status, 401);
+  assert.equal((await request('employer/interests/count', 'GET', undefined, employee)).status, 403);
+  assert.equal((await request('employer/interests/count', 'GET', undefined, outsider)).json.data.count, 0);
+  assert.equal((await request('employer/interests/count', 'GET', undefined, employer)).json.data.count, 1);
   const pending = await request('employer/interests', 'GET', undefined, employer);
   assert.equal(pending.json.data.length, 1);
   assert.equal(pending.json.data[0].employee.userId, employee.id);
@@ -194,6 +198,7 @@ test('acceptance requires ownership and creates exactly one match and conversati
   assert.equal(new Set(results.map(r => r.json.data.match.id)).size, 1);
   assert.equal(new Set(results.map(r => r.json.data.conversation.id)).size, 1);
   conversationId = results[0].json.data.conversation.id;
+  assert.equal((await request('employer/interests/count', 'GET', undefined, employer)).json.data.count, 0);
   assert.equal((await request('me/interests', 'GET', undefined, employee)).json.data.length, 0);
   assert.equal((await request('me/matches', 'GET', undefined, employee)).json.data.length, 1);
   assert.equal((await request('me/matches', 'GET', undefined, employer)).json.data.length, 4);

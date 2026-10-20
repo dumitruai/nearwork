@@ -37,8 +37,9 @@
     finally { fetching = false; loading = false; if (queued && alive) { queued = false; void load(); } }
   }
   onMount(() => {
+    let connected = false;
     void load();
-    const realtime = connectChat({ ready: () => void load(), status: connected => { if (!connected) clearAllTyping(); }, event: event => {
+    const realtime = connectChat({ ready: () => void load(), status: value => { connected = value; if (!value) clearAllTyping(); }, event: event => {
       if (event.type === 'typing') {
         if (event.data.userId === account.user.id) return;
         clearTyping(event.conversationId);
@@ -50,7 +51,7 @@
       if (event.type === 'message' && event.data.senderUserId !== account.user.id) clearTyping(event.conversationId);
       clearTimeout(refresh); refresh = setTimeout(() => void load(), 150);
     }});
-    const fallback = setInterval(() => { if (document.visibilityState === 'visible') void load(); }, 15000);
+    const fallback = setInterval(() => { if (!connected && document.visibilityState === 'visible') void load(); }, 15000);
     return () => { clearInterval(fallback); alive = false; clearTimeout(refresh); clearAllTyping(); realtime.close(); };
   });
 </script>

@@ -49,6 +49,8 @@
     return false;
   }, -10));
   let unreadCount = $state(0);
+  let interestCount = $state(0);
+  let refreshCounters = $state<() => void>(() => {});
   let messageNotice = $state<{ thread: Conversation; body: string } | null>(null);
   let messageNoticeTimer: ReturnType<typeof setTimeout> | undefined;
   let messageNoticeClosing = $state(false);
@@ -107,6 +109,10 @@
       try {
         const result = await api<{ count: number }>('conversations/unread');
         if (alive) unreadCount = result.count;
+        if (account.user.profileType === 'employer') {
+          const interests = await api<{ count: number }>('employer/interests/count');
+          if (alive) interestCount = interests.count;
+        }
       } catch { /* Keep the last confirmed count; reconnect/focus/poll retries. */ }
       finally {
         fetching = false;
@@ -130,16 +136,14 @@
         timer = setTimeout(() => void refreshUnread(), 100);
       },
     });
-    const resume = () => { if (document.visibilityState === 'visible') void refreshUnread(); };
-    const fallback = setInterval(resume, 15000);
-    window.addEventListener('focus', resume);
-    document.addEventListener('visibilitychange', resume);
+    // Persisted changes (including demo welcome messages) can have no live event.
+    refreshCounters = () => void refreshUnread();
+    const fallback = setInterval(() => { if (document.visibilityState === 'visible') void refreshUnread(); }, 15000);
     void refreshUnread();
     return () => {
       alive = false; clearTimeout(timer); clearInterval(fallback); realtime.close();
+      refreshCounters = () => {};
       removeMessageNotice();
-      window.removeEventListener('focus', resume);
-      document.removeEventListener('visibilitychange', resume);
     };
   });
   let requestId = 0;
@@ -244,6 +248,7 @@
     if (!dragX) dragX = decision === 'interested' ? 22 : -22;
     try {
       const result = await api<{ match: { source: string } | null }>(`jobs/${jobs[0].id}/decision`, { decision });
+      refreshCounters();
       // Only dismiss a card once its decision is safely persisted.
       await exitCard(decision);
       if (!mounted) return;
@@ -309,11 +314,11 @@
   {:else if editing || !employer}
     <section class="screen-section"><Profile {account} oncomplete={profileSaved} />{#if !employer}<button class="secondary full" onclick={onlocation}>Location & distance</button>{/if}</section>
   {:else}
-    <section class="profile-overview"><p class="eyebrow">EMPLOYER PROFILE</p><h1 class="identity-title">{account.profile?.companyName}</h1><button class="link edit-profile" onclick={() => editing = true}>Edit profile</button><p class="capitalize">{account.profile?.industry}</p><p class="inline-icon"><MapPin size={19} />{account.profile?.workplaceLabel}</p><button class="manage-jobs" onclick={() => tab = 'jobs'}><Briefcase size={25} /><span><strong>Manage your jobs</strong><small>Post roles and manage your listings</small></span><ArrowRight size={22} /></button><Connections {account} onchat={value => conversation = value} /></section>
+    <section class="profile-overview"><p class="eyebrow">EMPLOYER PROFILE</p><h1 class="identity-title">{account.profile?.companyName}</h1><button class="link edit-profile" onclick={() => editing = true}>Edit profile</button><p class="capitalize">{account.profile?.industry}</p><p class="inline-icon"><MapPin size={19} />{account.profile?.workplaceLabel}</p><button class="manage-jobs" onclick={() => tab = 'jobs'}><Briefcase size={25} /><span><strong>Manage your jobs</strong><small>Post roles and manage your listings</small></span><ArrowRight size={22} /></button><Connections {account} {interestCount} onchange={refreshCounters} onchat={value => conversation = value} /></section>
   {/if}
   {#if error}<div class="discovery-error" role="alert"><p>{error}</p><button class="link" disabled={busy} onclick={load}>Retry loading</button><button class="link" onclick={() => error = ''}>Dismiss</button></div>{/if}
   </div>
-  <BottomNav role={account.user.profileType} active={tab} {unreadCount} disabled={busy} onchange={value => { requestId++; loading = false; tab = value; editing = false; error = ''; if (value === 'discover') void load(); }} />
+  <BottomNav role={account.user.profileType} active={tab} {unreadCount} {interestCount} disabled={busy} onchange={value => { requestId++; loading = false; tab = value; editing = false; error = ''; refreshCounters(); if (value === 'discover') void load(); }} />
 {/if}
 {#if messageNotice && canShowMessageNotice(messageNotice.thread.id)}
   <div class="feedback-toast message-toast" role="status"

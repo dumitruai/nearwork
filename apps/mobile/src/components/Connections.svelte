@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { ChatCircle, X } from 'phosphor-svelte';
   import { api, initials, money, type Account, type Job, type Conversation } from '../lib/api';
-  let { account, onchat }: { account: Account; onchat: (conversation: Conversation) => void } = $props();
+  let { account, interestCount = 0, onchange = () => {}, onchat }: { account: Account; interestCount?: number; onchange?: () => void; onchat: (conversation: Conversation) => void } = $props();
   type Row = { job: Job; companyName?: string; employeeName?: string; conversationId?: string | null; match?: { source: string; createdAt: string }; employee?: { userId: string; name: string; bio: string | null; categories: string[] } };
   const employer = $derived(account.user.profileType === 'employer');
   let segment = $state<'interests' | 'matches'>('matches');
@@ -29,7 +29,7 @@
     try {
       const result = await api<{ conversation: { id: string } }>(`jobs/${row.job.id}/interests/${encodeURIComponent(row.employee.userId)}/accept`, {});
       if (!alive) return;
-      selected = null; chat({ ...row, conversationId: result.conversation.id });
+      onchange(); selected = null; chat({ ...row, conversationId: result.conversation.id });
     } catch(e) { error = (e as Error).message; }
     finally { busy = false; }
   }
@@ -37,7 +37,7 @@
 </script>
 <section class="connections">
   <h2>{employer ? 'Your connections' : 'Your possibilities'}</h2>
-  <div class="segments connected-segments">{#each ['interests', 'matches'] as key}<button disabled={busy} aria-pressed={segment === key} onclick={() => { segment = key as typeof segment; rows = []; more = false; void load(); }}>{key === 'interests' ? employer ? 'Interests' : 'Interested' : 'Matches'}</button>{/each}</div>
+  <div class="segments connected-segments">{#each ['interests', 'matches'] as key}<button disabled={busy} aria-pressed={segment === key} onclick={() => { segment = key as typeof segment; rows = []; more = false; void load(); }}>{key === 'interests' ? employer ? 'Interests' : 'Interested' : 'Matches'}{#if key === 'interests' && employer && interestCount > 0}<span class="unread-count">{interestCount}</span>{/if}</button>{/each}</div>
   <p class="hint">{segment === 'matches' ? 'People you’ve matched with.' : employer ? 'People interested in your roles.' : 'Roles you’ve shown interest in.'}</p>
   {#if error && !selected}<p class="error" role="alert">{error}</p><button class="secondary" onclick={() => load()}>Retry</button>{/if}
   {#if loading && !rows.length}<p role="status">Loading connections…</p>

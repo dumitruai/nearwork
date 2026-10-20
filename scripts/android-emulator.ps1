@@ -9,5 +9,4 @@ if (!$Sdk -or !(Test-Path "$Sdk/emulator/emulator.exe")) {
 }
 if ($AvdHome) { $env:ANDROID_AVD_HOME = $AvdHome }
 $env:ANDROID_HOME = $Sdk
-# This launcher intentionally opens the interactive emulator requested by the user.
 Start-Process -FilePath "$Sdk/emulator/emulator.exe" -ArgumentList @('-avd', $Name, '-no-snapshot', '-gpu', 'auto')

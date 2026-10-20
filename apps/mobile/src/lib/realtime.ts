@@ -36,10 +36,12 @@ export function connectChat(options: {
   socket.on('connect_error', schedule);
   const resume = () => {
     if (document.visibilityState !== 'visible') return;
-    if (socket.connected) options.ready();
-    else { clearTimeout(retry); retry = undefined; void connect(); }
+    options.ready();
+    if (!socket.connected) { clearTimeout(retry); retry = undefined; void connect(); }
   };
   window.addEventListener('online', resume);
+  window.addEventListener('focus', resume);
+  window.addEventListener('nearwork:resume', resume);
   document.addEventListener('visibilitychange', resume);
   void connect();
   return {
@@ -47,6 +49,7 @@ export function connectChat(options: {
     close: () => {
       stopped = true; clearTimeout(retry); socket.removeAllListeners(); socket.disconnect();
       window.removeEventListener('online', resume); document.removeEventListener('visibilitychange', resume);
+      window.removeEventListener('focus', resume); window.removeEventListener('nearwork:resume', resume);
     },
   };
 }

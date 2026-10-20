@@ -48,7 +48,7 @@
       if (screen === 'location' && account?.profile) { screen = 'home'; return true; }
       return false;
     }, -100);
-    const stopNative = startNative(() => { void refreshLocation(); });
+    const stopNative = startNative(() => { window.dispatchEvent(new Event('nearwork:resume')); void refreshLocation(); });
     return () => { locationGeneration++; removeBack(); stopNative(); };
   });
   function start(roleChoice?: Role | null) {
