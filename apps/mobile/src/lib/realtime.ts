@@ -7,7 +7,9 @@ export function connectChat(options: {
   ready: () => void; status: (connected: boolean) => void;
 }) {
   let stopped = false, connecting = false, retry: ReturnType<typeof setTimeout> | undefined;
-  const socket = io(new URL(base || '/', window.location.origin).origin, {
+  // Vercel's cross-project HTTP rewrite does not forward WebSocket upgrades.
+  // Hosted sockets connect directly to the same backend that serves the API.
+  const socket = io(new URL(import.meta.env.VITE_REALTIME_URL || base || '/', window.location.origin).origin, {
     path: '/api/socket-io/socket.io',
     transports: ['websocket'], autoConnect: false, reconnection: false,
   });
