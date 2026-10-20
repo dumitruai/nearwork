@@ -27,6 +27,10 @@
     try {
       const next = await api<Account>('me');
       account = next; role = next.user.profileType;
+      if (next.preferences?.locationSource === 'manual' && next.preferences.latitude != null && next.preferences.longitude != null) {
+        locationGeneration++;
+        point = { latitude: next.preferences.latitude, longitude: next.preferences.longitude, label: next.preferences.locationLabel || 'Selected location' };
+      }
       screen = !next.profile ? 'profile' : 'home';
       if (!point) void refreshLocation();
     } catch (e) {

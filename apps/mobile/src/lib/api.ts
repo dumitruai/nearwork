@@ -4,7 +4,7 @@ import {Geolocation} from '@capacitor/geolocation';
 export type Role = 'employee' | 'employer';
 export type Category = 'hospitality' | 'retail' | 'delivery' | 'cleaning' | 'warehouse';
 export type Point = { latitude: number; longitude: number; label?: string };
-export type Preferences = { radiusMeters: number; locationSource: 'device' | null };
+export type Preferences = { radiusMeters: number; locationSource: 'device' | 'manual' | null; latitude?: number | null; longitude?: number | null; locationLabel?: string | null };
 export type Profile = {
     categories?: Category[];
     availability?: string[];

@@ -21,7 +21,7 @@
   async function profileSaved() { await onrefresh(); editing = false; notify('Profile updated.'); }
   async function locationSaved(value: Point | null) { onpoint(value); await onrefresh(); locationOpen = false; void load(); }
 
-  const needsLocation = $derived(account.preferences?.locationSource !== 'device' || !point);
+  const needsLocation = $derived(!account.preferences?.locationSource || !point);
   let total = $state(0);
   let jobs = $state<Job[]>([]);
   let busy = $state(false);
@@ -266,7 +266,7 @@
   <div class="employee-content" class:discovery-content={tab === 'discover'}>
   {#if tab === 'discover'}
     <div class="discovery-location"><MapPin size={24} weight="fill" /><div class="location-copy"><strong>{point ? formatLocation(point) : 'Choose a location'}</strong><span>Within {(account.preferences?.radiusMeters ?? 5000) / 1000} km</span></div><button class="link location-action" disabled={busy} onclick={onlocation} aria-label="Edit discovery location">Edit</button></div>
-    {#if needsLocation}<div class="no-results"><MapPin size={56} weight="light" /><h2>Find work near you</h2><p>Use your device location to find nearby jobs. Your Saved jobs and Chats are available below.</p><button class="primary" onclick={onlocation}>Set location</button></div>
+    {#if needsLocation}<div class="no-results"><MapPin size={56} weight="light" /><h2>Find work near you</h2><p>Use your device location or choose an area manually to find nearby jobs. Your Saved jobs and Chats are available below.</p><button class="primary" onclick={onlocation}>Set location</button></div>
     {:else if loading}<p class="loading" role="status">Finding nearby opportunities…</p>
     {:else if jobs[0]}
       <p class="muted" role="status">{total} jobs within {(account.preferences?.radiusMeters ?? 5000) / 1000} km</p>

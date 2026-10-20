@@ -16,7 +16,7 @@ export const employerInput = z.object({
 }).strict();
 export const preferencesInput = z.object({
   radiusMeters: z.union([z.literal(1000), z.literal(5000), z.literal(10000), z.literal(20000)]),
-  locationSource: z.literal('device').nullable(),
+  locationSource: z.enum(['device', 'manual']).nullable(),
 }).strict();
 export const jobInput = z.object({
   role: nonempty(160), category: z.enum(categories), hourlyPayMinor: z.number().int().positive().max(2147483647),

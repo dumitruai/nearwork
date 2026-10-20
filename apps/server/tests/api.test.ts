@@ -568,3 +568,33 @@ test('radius bands, cell boundaries, fixture repair, and GPS-free existing activ
   assert.equal((await request('me', 'GET', undefined, client)).json.data.preferences.locationSource, 'device');
   assert.equal((await request(`jobs?latitude=${latitude}&longitude=${longitude}`, 'GET', undefined, client)).status, 200);
 });
+
+test('manual employee locations persist through radius changes and can switch back to device', async () => {
+  const client = await signup('employee', 'manual-location');
+  await request('me/profile', 'PUT', employeeData, client);
+  const invalid = await request('me/preferences', 'PUT', { radiusMeters: 1000, locationSource: 'manual' }, client);
+  assert.equal(invalid.status, 400);
+  const point = { latitude: 51.539, longitude: -0.1426, label: 'Camden' };
+  const saved = await request('me/preferences', 'PUT', { radiusMeters: 1000, locationSource: 'manual', point }, client);
+  assert.equal(saved.status, 200, JSON.stringify(saved.json));
+  let prefs = (await request('me', 'GET', undefined, client)).json.data.preferences;
+  assert.equal(prefs.locationSource, 'manual');
+  assert.equal(prefs.latitude, point.latitude);
+  assert.equal(prefs.longitude, point.longitude);
+  assert.equal(prefs.locationLabel, point.label);
+  const nearby = await request('jobs?latitude=51.539&longitude=-0.1426', 'GET', undefined, client);
+  assert.equal(nearby.status, 200);
+  assert.ok(nearby.json.data.items.every((job: { distanceMeters: number }) => job.distanceMeters <= 1000));
+  assert.equal((await request('me/preferences', 'PUT', { radiusMeters: 5000, locationSource: 'manual' }, client)).status, 200);
+  prefs = (await request('me', 'GET', undefined, client)).json.data.preferences;
+  assert.equal(prefs.latitude, point.latitude);
+  assert.equal(prefs.locationLabel, point.label);
+  assert.equal(prefs.radiusMeters, 5000);
+  assert.equal((await request('me/preferences', 'PUT', { radiusMeters: 5000, locationSource: 'manual', point: { latitude: 91, longitude: 0 } }, client)).status, 400);
+  assert.equal((await request('me/preferences', 'PUT', { radiusMeters: 5000, locationSource: 'device' }, client)).status, 200);
+  prefs = (await request('me', 'GET', undefined, client)).json.data.preferences;
+  assert.equal(prefs.locationSource, 'device');
+  assert.equal(prefs.latitude, null);
+  assert.equal(prefs.longitude, null);
+  assert.equal(prefs.locationLabel, null);
+});

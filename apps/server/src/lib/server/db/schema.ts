@@ -71,10 +71,13 @@ export const employeePreferences = pgTable('employee_preferences', {
   userId: text('user_id').primaryKey().references(() => employeeProfiles.userId, { onDelete: 'cascade' }),
   radiusMeters: integer('radius_meters').notNull().default(5000),
   locationSource: text('location_source'),
+  latitude: doublePrecision('latitude'), longitude: doublePrecision('longitude'),
+  locationLabel: text('location_label'),
   createdAt: created(), updatedAt: updated(),
 }, t => [
   check('radius_check', sql`${t.radiusMeters} IN (1000,5000,10000,20000)`),
-  check('location_check', sql`${t.locationSource} IS NULL OR ${t.locationSource} = 'device'`),
+  check('manual_location_check', sql`${t.locationSource} IS DISTINCT FROM 'manual' OR (${t.latitude} IS NOT NULL AND ${t.longitude} IS NOT NULL AND ${t.latitude} BETWEEN -90 AND 90 AND ${t.longitude} BETWEEN -180 AND 180)`),
+  check('location_check', sql`${t.locationSource} IS NULL OR ${t.locationSource} IN ('device', 'manual')`),
 ]);
 export const jobs = pgTable('jobs', {
   id: uuid('id').primaryKey().defaultRandom(),

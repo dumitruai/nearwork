@@ -6,7 +6,8 @@
   import { locate, type Point } from '../lib/api';
   import { searchAddresses, type AddressResult } from '../lib/addressSearch';
 
-  let { point, label, oncancel, onconfirm }: {
+  let { point, label, purpose = 'workplace', oncancel, onconfirm }: {
+    purpose?: 'workplace' | 'search';
     point: Point | null;
     label: string;
     oncancel: () => void;
@@ -64,7 +65,7 @@
           candidate = { latitude: position.lat, longitude: position.lng };
           if (marker) marker.setLatLng(position);
           else {
-            marker = L.marker(position, { icon, draggable: true, title: 'Workplace pin. Drag to adjust.', alt: 'Selected workplace' }).addTo(map);
+            marker = L.marker(position, { icon, draggable: true, title: 'Location pin. Drag to adjust.', alt: 'Selected location' }).addTo(map);
             marker.on('dragend', () => {
               const moved = marker!.getLatLng();
               placePin({ latitude: moved.lat, longitude: moved.lng });
@@ -139,17 +140,17 @@
 
 <dialog class="sheet workplace-sheet" use:openDialog oncancel={oncancel} aria-labelledby="workplace-title" aria-describedby="workplace-help">
   <div class="workplace-heading">
-    <h2 id="workplace-title">Pin your workplace.</h2>
-    <button type="button" class="icon" aria-label="Cancel workplace changes" onclick={oncancel}><X size={23} /></button>
+    <h2 id="workplace-title">{purpose === 'workplace' ? 'Pin your workplace.' : 'Choose your location.'}</h2>
+    <button type="button" class="icon" aria-label="Cancel location changes" onclick={oncancel}><X size={23} /></button>
   </div>
-  <p id="workplace-help" class="muted">Search for your workplace address, then drag the pin to the exact spot.</p>
-  <form class="address-search" role="search" aria-label="Find workplace address" onsubmit={search}>
+  <p id="workplace-help" class="muted">Search for an address, then drag the pin to the exact spot.</p>
+  <form class="address-search" role="search" aria-label="Find address" onsubmit={search}>
     <label for="workplace-search">Search address</label>
     <div class="address-search-row">
       <input id="workplace-search" type="search" bind:value={query} oninput={resetSearch} placeholder="Street, postcode or place" minlength="3" maxlength="250" autocomplete="off" aria-describedby="address-search-status" />
       <button class="secondary" type="submit" disabled={!ready || searching || query.trim().length < 3} aria-label={searching ? 'Searching addresses' : 'Search addresses'}><MagnifyingGlass size={21} /></button>
     </div>
-    <p id="address-search-status" class="hint" role="status">{searching ? 'Searching addresses…' : searched ? results.length ? `${results.length} ${results.length === 1 ? 'result' : 'results'}. Choose your workplace below.` : 'No addresses found. Add a town or postcode, or use the map.' : 'Enter an address and press Search or Enter.'}</p>
+    <p id="address-search-status" class="hint" role="status">{searching ? 'Searching addresses…' : searched ? results.length ? `${results.length} ${results.length === 1 ? 'result' : 'results'}. Choose an address below.` : 'No addresses found. Add a town or postcode, or use the map.' : 'Enter an address and press Search or Enter.'}</p>
   </form>
   {#if searchError}<p class="error" role="alert">{searchError}</p>{/if}
   {#if results.length}
@@ -165,22 +166,22 @@
   </button>
   {#if locationError}<p class="error" role="alert">{locationError}</p>{/if}
   <div class="workplace-map-frame">
-    <div class="workplace-map" bind:this={mapNode} role="region" aria-label="Workplace map" aria-describedby="map-keyboard-help"></div>
+    <div class="workplace-map" bind:this={mapNode} role="region" aria-label="Location map" aria-describedby="map-keyboard-help"></div>
     <span class="map-center" aria-hidden="true"></span>
     {#if !ready}<p class="map-loading" role="status">{mapError ? 'Map unavailable' : 'Loading map…'}</p>{/if}
   </div>
   {#if mapError}<p class="error" role="alert">{mapError}{#if ready}<button type="button" class="link" onclick={() => { mapError = ''; tiles?.redraw(); }}>Retry map</button>{/if}</p>{/if}
   <div class="map-selection">
-    <span role="status"><MapPin size={18} weight="fill" />{candidate ? 'Workplace pin set' : 'Choose a point'}</span>
+    <span role="status"><MapPin size={18} weight="fill" />{candidate ? 'Location pin set' : 'Choose a point'}</span>
     <button type="button" class="link" disabled={!ready} onclick={useCenter}>Pin map center</button>
   </div>
   <p id="map-keyboard-help" class="hint">You can also use arrow keys on the map, then select “Pin map center”.</p>
-  <label class="workplace-name">Workplace name or address
+  <label class="workplace-name">{purpose === 'workplace' ? 'Workplace name or address' : 'Location name or address (optional)'}
     <input bind:value={workplaceLabel} maxlength="160" placeholder="e.g. Oak & Bean, 24 High Street" autocomplete="street-address" />
   </label>
-  <p class="hint workplace-label-help">Shown to candidates. The pin sets the exact location.</p>
+  <p class="hint workplace-label-help">{purpose === 'workplace' ? 'Shown to candidates. The pin sets the exact location.' : 'Find jobs within your travel radius of this pin.'}</p>
   <div class="workplace-actions">
-    <button type="button" class="primary" disabled={!ready || !candidate || !workplaceLabel.trim() || locating} onclick={() => candidate && onconfirm(candidate, workplaceLabel.trim())}>Confirm workplace</button>
+    <button type="button" class="primary" disabled={!ready || !candidate || (purpose === 'workplace' && !workplaceLabel.trim()) || locating} onclick={() => candidate && onconfirm(candidate, workplaceLabel.trim())}>{purpose === 'workplace' ? 'Confirm workplace' : 'Confirm location'}</button>
     <button type="button" class="link full" onclick={oncancel}>Cancel</button>
   </div>
 </dialog>
