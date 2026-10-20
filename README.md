@@ -1,8 +1,8 @@
 # Nearwork
 
 Nearwork is a mobile-first prototype for finding nearby frontline work in hospitality, retail, delivery, cleaning, and warehouses. Workers create a lightweight profile, set a travel radius, and swipe job cards to pass or express interest. Mutual interest opens a conversation; saved interests and matches persist between sessions.
-
-Built against [the original product brief](product-brief.txt). **Android is the only native target**, with a browser preview. **Time spent: approximately 4 hours.**
+ 
+**Android is the only native target**, with a browser preview. **Time spent: approximately 6.5 hours.**
 
 Authentication, employer job posting/acceptance, persisted chat, realtime updates, maps, and optional generated replies extend the brief's worker-only core. They demonstrate a connected two-sided flow but increase setup and verification cost. Android builds and runs on an emulator; physical-device coverage remains unfinished. This is a prototype, not a production-ready hiring service.
 
