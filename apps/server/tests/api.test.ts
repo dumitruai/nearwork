@@ -36,7 +36,9 @@ const password = 'integration-password-123';
 
 async function request(path: string, method = 'GET', data?: unknown, client?: Client) {
   const req = new Request(`${baseURL}${path.startsWith('/api/') ? path : `/api/v1/${path}`}`, {
-    method, headers: { origin: baseURL, ...(client ? { cookie: client.cookie } : {}),
+    // Cold Vite compilation can outlast an idle connection on CI. Each request
+    // gets a fresh HTTP connection; Socket.IO reconnect is tested separately.
+    method, headers: { origin: baseURL, connection: 'close', ...(client ? { cookie: client.cookie } : {}),
       ...(data !== undefined ? { 'content-type': 'application/json' } : {}) },
     body: data === undefined ? undefined : JSON.stringify(data),
   });
