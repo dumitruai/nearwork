@@ -1,0 +1,59 @@
+name: Workspace checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Workspace checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_USER: nearwork
+          POSTGRES_PASSWORD: nearwork
+          POSTGRES_DB: nearwork
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nearwork -d nearwork"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      REDIS_URL: redis://localhost:6379
+      TEST_DATABASE_URL: postgresql://nearwork:nearwork@localhost:5432/nearwork
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run build
+      - name: Verify the built API and WebSocket server together
+        run: npm test
+        env:
+          NEARWORK_TEST_SERVER_MODE: production
+      - run: npm run test -w @nearwork/mobile
+      - run: npm run android:sync
+      - run: docker compose config --quiet

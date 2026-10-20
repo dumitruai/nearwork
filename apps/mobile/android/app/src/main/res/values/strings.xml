@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Nearwork</string>
+    <string name="title_activity_main">Nearwork</string>
+    <string name="package_name">com.nearwork.app</string>
+    <string name="custom_url_scheme">com.nearwork.app</string>
+</resources>

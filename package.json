@@ -1,0 +1,32 @@
+{
+  "name": "nearwork",
+  "version": "0.0.0",
+  "description": "Nearwork workspace",
+  "type": "module",
+  "workspaces": [
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=11"
+  },
+  "packageManager": "npm@11.6.2",
+  "scripts": {
+    "dev": "concurrently --kill-others -n mobile,server \"npm run dev -w @nearwork/mobile\" \"npm run dev -w @nearwork/server\"",
+    "build": "npm run build --workspaces --if-present",
+    "check": "npm run check --workspaces --if-present",
+    "android:sync": "npm run build -w @nearwork/mobile && npm run android:sync -w @nearwork/mobile",
+    "android:open": "npm run android:open -w @nearwork/mobile",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "db:generate": "npm run db:generate -w @nearwork/server",
+    "db:migrate": "npm run db:migrate -w @nearwork/server",
+    "test": "npm run test -w @nearwork/server"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6",
+    "typescript": "~6.0.3"
+  },
+  "private": true
+}

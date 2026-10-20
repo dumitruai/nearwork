@@ -1,0 +1,16 @@
+**/node_modules
+**/dist
+**/.svelte-kit
+**/.vercel
+.git
+.idea
+.env
+.env.*
+!**/.env.example
+apps/mobile/android
+
+**/dist-native
+**/.svelte-kit-*
+apps/server/build
+tmp
+.agents

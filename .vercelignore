@@ -1,0 +1,11 @@
+.agents/
+.idea/
+tmp/
+apps/mobile/android/
+apps/server/build/
+**/.env*
+**/tests/
+**/.svelte-kit/
+**/.svelte-kit-*/
+**/dist/
+**/dist-native/

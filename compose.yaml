@@ -1,0 +1,59 @@
+name: nearwork
+
+services:
+  app:
+    build: .
+    init: true
+    ports:
+      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:5173:5173"
+    environment:
+      DATABASE_URL: postgresql://nearwork:nearwork@db:5432/nearwork
+      REDIS_URL: redis://redis:6379
+      REALTIME_SECRET: ${REALTIME_SECRET:-local-realtime-only-change-this-secret-32chars}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-local-development-only-change-this-secret-32chars}
+      BETTER_AUTH_URL: http://localhost:3000
+      TRUSTED_ORIGINS: http://localhost:3000,http://localhost:5173,http://localhost,https://localhost
+      ENABLE_LOCATION_MOCKS: ${ENABLE_LOCATION_MOCKS:-true}
+      ENABLE_APPLICANT_BOTS: ${ENABLE_APPLICANT_BOTS:-true}
+      XAI_API_KEY: ${XAI_API_KEY:-}
+      XAI_MODEL: ${XAI_MODEL:-grok-build-0.1}
+      VITE_API_BASE_URL: http://localhost:3000
+    volumes:
+      - ./apps/mobile/src:/workspace/apps/mobile/src
+      - ./apps/server/src:/workspace/apps/server/src
+      - ./apps/shared:/workspace/apps/shared
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: nearwork
+      POSTGRES_PASSWORD: nearwork
+      POSTGRES_DB: nearwork
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nearwork -d nearwork"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
